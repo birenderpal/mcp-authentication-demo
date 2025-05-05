@@ -1,0 +1,27 @@
+{
+  "name": "mcp-authentication-demo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "client:dev": "npm run dev --workspace=client",
+    "client:build": "npm run build --workspace=client",
+    "client:start": "npm run start --workspace=client",
+    "client:lint": "npm run lint --workspace=client",
+    "server:dev": "npm run dev --workspace=server",
+    "server:build": "npm run build --workspace=server",
+    "server:start": "npm run start --workspace=server",
+    "dev": "concurrently \"npm run client:dev\" \"npm run server:dev\"",
+    "build": "npm run client:build && npm run server:build",
+    "start": "concurrently \"npm run client:start\" \"npm run server:start\"",
+    "install:all": "npm install && npm run install:client && npm run install:server",
+    "install:client": "npm install --workspace=client",
+    "install:server": "npm install --workspace=server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
