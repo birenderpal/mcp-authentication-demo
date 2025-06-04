@@ -93,37 +93,6 @@ server.server.setRequestHandler(
 // Apply authentication middleware
 app.use('/mcp', authMiddleware);
 
-// Handle requests with auth
-async function handleRequestWithAuth(
-  transport: StreamableHTTPServerTransport,
-  req: express.Request & { auth?: AuthInfo },
-  res: express.Response,
-  body?: unknown
-) {
-  // Store the original onmessage handler
-  const originalOnmessage = transport.onmessage;
-  
-  // Create a wrapper function that will be called for each message
-  const messageHandler = (message: JSONRPCMessage) => {
-    // If there's an original handler, call it with the auth info
-    if (originalOnmessage) {
-      // We need to access the internal implementation of the protocol      
-      //@ts-expect-error
-      originalOnmessage(message, { authInfo: req.auth });
-    }
-  };
-
-  // Replace the onmessage handler temporarily
-  transport.onmessage = messageHandler;
-
-  try {
-    
-    await transport.handleRequest(req, res, body);
-  } finally {
-    // Restore the original handler
-    transport.onmessage = originalOnmessage;
-  }
-}
 
 // MCP handler with stateful sessions
 const transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
@@ -157,7 +126,7 @@ app.post('/mcp', async (req, res) => {
       
       // Connect to the MCP server
       await server.connect(transport);
-      await handleRequestWithAuth(transport, req, res, req.body);
+      await transport.handleRequest(req, res, req.body);
       return; 
     } else {
       // Invalid request
@@ -171,8 +140,8 @@ app.post('/mcp', async (req, res) => {
       });
       return;
     }
-    
-    await handleRequestWithAuth(transport, req, res, req.body);
+
+    await transport.handleRequest(req, res, req.body);
   } catch (error) {
     console.error('Error handling MCP request:', error);
     if (!res.headersSent) {
